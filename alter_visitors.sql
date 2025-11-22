@@ -1,1 +1,0 @@
-ALTER TABLE tbl_visitors ADD COLUMN registration_type ENUM('beforehand', 'spot') DEFAULT 'beforehand';

@@ -1,1 +1,0 @@
-DESCRIBE tbl_visitors;

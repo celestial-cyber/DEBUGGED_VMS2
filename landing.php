@@ -13,9 +13,9 @@ if (isset($_POST['login_btn'])) {
     $role  = $_POST['role'];
 
     if ($role === "admin") {
-        $select_query = mysqli_query($conn, "SELECT id, user_name FROM tbl_admin WHERE emailid='$email' AND password='$pwd'");
+        $select_query = mysqli_query($conn, "SELECT id, user_name FROM vms_admin WHERE emailid='$email' AND password='$pwd'");
     } else {
-        $select_query = mysqli_query($conn, "SELECT id, member_name FROM tbl_members WHERE emailid='$email' AND password='$pwd'");
+        $select_query = mysqli_query($conn, "SELECT id, member_name FROM vms_members WHERE emailid='$email' AND password='$pwd'");
     }
 
     if (mysqli_num_rows($select_query) > 0) {

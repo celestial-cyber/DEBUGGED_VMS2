@@ -1,0 +1,1 @@
+ALTER TABLE vms_visitors ADD COLUMN mobile VARCHAR(20) AFTER email;

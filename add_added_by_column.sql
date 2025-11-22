@@ -1,1 +1,0 @@
-ALTER TABLE tbl_visitors ADD COLUMN added_by INT DEFAULT NULL AFTER year_of_graduation;

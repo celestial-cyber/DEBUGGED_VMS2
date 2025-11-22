@@ -33,7 +33,7 @@ The `landing.php` has been completely redesigned to serve as the **primary publi
 ### 3. Database Synchronization
 When alumni register via the public form:
 1. Record is inserted into `alumni_registrations` table with full profile
-2. Synchronized record is inserted into `tbl_visitors` with mapped fields:
+2. Synchronized record is inserted into `vms_visitors` with mapped fields:
    - name → name
    - email → email
    - call_number → phone
@@ -61,7 +61,7 @@ When alumni register via the public form:
    - PHP validates all required fields
    - Transaction begins
    - Record inserted into `alumni_registrations`
-   - Parallel record inserted into `tbl_visitors`
+   - Parallel record inserted into `vms_visitors`
    - Transaction committed
    - Success message displayed
 5. Alumni record immediately appears in visitor dashboards
@@ -71,7 +71,7 @@ When alumni register via the public form:
 2. User selects role (Admin/Member)
 3. User enters email and password
 4. On submit:
-   - Query tbl_admin or tbl_members (based on role)
+   - Query vms_admin or vms_members (based on role)
    - If found: set session variables
    - Redirect to admin_dashboard.php or member_dashboard.php
    - If not found: display error message
@@ -94,11 +94,11 @@ When alumni register via the public form:
 SELECT COUNT(*) FROM alumni_registrations;
 
 -- Verify visitor syncing
-SELECT COUNT(*) FROM tbl_visitors WHERE added_by IS NULL;
+SELECT COUNT(*) FROM vms_visitors WHERE added_by IS NULL;
 
 -- Check latest registrations
 SELECT name, email, status FROM alumni_registrations ORDER BY created_at DESC LIMIT 5;
-SELECT name, email, status FROM tbl_visitors WHERE added_by IS NULL ORDER BY registration_date DESC LIMIT 5;
+SELECT name, email, status FROM vms_visitors WHERE added_by IS NULL ORDER BY registration_date DESC LIMIT 5;
 ```
 
 ## Files Modified
@@ -110,7 +110,7 @@ SELECT name, email, status FROM tbl_visitors WHERE added_by IS NULL ORDER BY reg
 ## Testing
 ✓ PHP syntax validation passed
 ✓ Alumni form submission processed successfully
-✓ Test alumni record created in both tables (alumni_registrations + tbl_visitors)
+✓ Test alumni record created in both tables (alumni_registrations + vms_visitors)
 ✓ Tab navigation working correctly
 ✓ Form validation working (required fields, email format, phone length)
 ✓ Success/error messages displaying properly
