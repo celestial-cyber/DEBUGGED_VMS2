@@ -1,0 +1,207 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
+include __DIR__ . '/../config/connection.php';
+require __DIR__ . '/../vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
+$name = $_SESSION['name'];
+$id = $_SESSION['id'];
+if(empty($id)) {
+    header("Location: ../index.php");
+    exit();
+}
+
+$message = '';
+$message_type = '';
+
+// Fetch available events
+$events_query = mysqli_query($conn, "SELECT event_id, event_name, event_date FROM vms_events ORDER BY event_date DESC");
+$events = mysqli_fetch_all($events_query, MYSQLI_ASSOC);
+
+// Handle file upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['excel_file'])) {
+    $event_id = intval($_POST['event_id']);
+    $file = $_FILES['excel_file'];
+    
+    if ($file['error'] === UPLOAD_ERR_OK) {
+        $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowed_ext = ['xlsx', 'xls', 'csv'];
+        
+        if (in_array($file_ext, $allowed_ext)) {
+            $error_messages = array();
+                $imported_count = 0;
+                $failed_count = 0;
+
+                try {
+                    $spreadsheet = IOFactory::load($file['tmp_name']);
+                    $sheet = $spreadsheet->getActiveSheet();
+                    $rows = $sheet->toArray();
+                    
+                    // Skip header row (assuming first row is headers)
+                    for ($i = 1; $i < count($rows); $i++) {
+                        $row = $rows[$i];
+                        
+                        // Skip completely empty rows
+                        if (empty(array_filter($row))) {
+                            continue;
+                        }
+                        
+                        // Map columns (adjust based on your Excel structure)
+                        $name = trim($row[0] ?? '');
+                        $email = trim($row[1] ?? '');
+                        $mobile = trim($row[2] ?? '');
+                        $address = trim($row[3] ?? '');
+                        $department = trim($row[4] ?? '');
+                        $gender = trim($row[5] ?? '');
+                        $year_of_graduation = trim($row[6] ?? '');
+                        
+                        // Validate required fields
+                        if (empty($name) || empty($email) || empty($mobile)) {
+                            $failed_count++;
+                            $error_messages[] = "Row " . ($i + 1) . ": Missing required fields (name, email, or mobile)";
+                            continue;
+                        }
+                        
+                        // Validate email format
+                        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                            $failed_count++;
+                            $error_messages[] = "Row " . ($i + 1) . ": Invalid email format";
+                            continue;
+                        }
+                        
+                        // Insert into database
+                        $stmt = $conn->prepare("INSERT INTO vms_visitors (event_id, name, email, mobile, address, department, gender, year_of_graduation, added_by, visitor_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'regular')");
+                        
+                        if ($stmt) {
+                            $stmt->bind_param("isssssssi", 
+                                $event_id, 
+                                $name, 
+                                $email, 
+                                $mobile, 
+                                $address, 
+                                $department, 
+                                $gender, 
+                                $year_of_graduation, 
+                                $_SESSION['id']
+                            );
+                            
+                            if ($stmt->execute()) {
+                                $imported_count++;
+                            } else {
+                                $failed_count++;
+                                $error_messages[] = "Row " . ($i + 1) . ": " . $stmt->error;
+                            }
+                            $stmt->close();
+                        } else {
+                            $failed_count++;
+                            $error_messages[] = "Row " . ($i + 1) . ": Failed to prepare statement";
+                        }
+                    }
+                    
+                    if ($imported_count > 0) {
+                        $message = "Import completed. Successfully imported: $imported_count, Failed: $failed_count";
+                        $message_type = ($failed_count > 0) ? 'warning' : 'success';
+                    } else {
+                        $message = "No records were imported. Failed attempts: $failed_count";
+                        $message_type = 'danger';
+                    }
+                    
+                } catch (Exception $e) {
+                    $message = "Error processing file: " . $e->getMessage();
+                    $message_type = 'danger';
+                    $error_messages[] = $e->getMessage();
+                }
+        } else {
+            $message = "Invalid file type. Please upload Excel or CSV files.";
+            $message_type = 'error';
+        }
+    } else {
+        $message = "File upload error.";
+        $message_type = 'error';
+    }
+}
+
+// Fetch events for dropdown
+$events = mysqli_query($conn, "SELECT * FROM vms_events ORDER BY event_name");
+?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
+        <div class="title-row">
+            <span class="chip"><i class="fa-solid fa-file-excel text-primary"></i> Excel Import</span>
+            <h2>📊 Import Visitors from Excel</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" onclick="location.href='../admin/manage-visitors.php'">
+                <i class="fa-solid fa-arrow-left me-2"></i>Back to Visitors
+            </button>
+        </div>
+    </div>
+
+    <?php if ($message): ?>
+    <div class="alert alert-<?php echo $message_type === 'error' ? 'danger' : 'success'; ?> mb-3">
+        <?php echo htmlspecialchars($message); ?>
+    </div>
+    <?php endif; ?>
+
+    <!-- Upload Form -->
+    <div class="card-lite mb-4">
+        <div class="card-head">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-upload text-primary"></i>
+                <span class="fw-semibold">Upload Excel File</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Select Event</label>
+                    <select class="form-control" name="event_id" required>
+                        <option value="">Select Event</option>
+                        <?php while($event = mysqli_fetch_assoc($events)): ?>
+                        <option value="<?php echo $event['event_id']; ?>"><?php echo htmlspecialchars($event['event_name']); ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Excel File</label>
+                    <input type="file" class="form-control" name="excel_file" accept=".xlsx,.xls,.csv" required>
+                    <div class="form-text">Supported formats: .xlsx, .xls, .csv</div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-upload me-2"></i>Upload and Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Excel Format Guide -->
+    <div class="card-lite">
+        <div class="card-head">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-info-circle text-info"></i>
+                <span class="fw-semibold">Excel Format Guide</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p>Your Excel file should have the following columns in order:</p>
+            <ol>
+                <li>Name (Required)</li>
+                <li>Email</li>
+                <li>Mobile</li>
+                <li>Address</li>
+                <li>Department</li>
+                <li>Gender (Male/Female/Other)</li>
+                <li>Year of Graduation</li>
+            </ol>
+            <p class="text-muted">The first row should be headers. Empty rows will be skipped.</p>
+        </div>
+    </div>
+</div>
+
+<?php include __DIR__ . '/../includes/footer.php'; ?>
