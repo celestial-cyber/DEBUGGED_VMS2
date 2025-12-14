@@ -25,8 +25,8 @@ if(isset($_POST['sbt-note'])) {
         $popup_type = "danger";
   } else {
     $event_id = isset($_POST['event_id']) ? intval($_POST['event_id']) : 0;
-    $sql = "INSERT INTO vms_coordinator_notes (event_id, content, note_type, created_at)
-        VALUES (" . ($event_id > 0 ? $event_id : 'NULL') . ", '$content', '$note_type', NOW())";
+    $sql = "INSERT INTO vms_coordinator_notes (event_id, content, note_type, creator_type, created_at)
+        VALUES (" . ($event_id > 0 ? $event_id : 'NULL') . ", '$content', '$note_type', 'coordinator', NOW())";
         
     if (mysqli_query($conn, $sql)) {
       $popup_message = "Note added successfully!";

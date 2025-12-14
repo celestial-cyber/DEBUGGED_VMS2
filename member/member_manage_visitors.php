@@ -97,7 +97,9 @@ if(empty($id))
                             <th>Email</th>
                             <th>Mobile</th>
                             <th>Department</th>
+                            <th>Year of Graduation</th>
                             <th>Status</th>
+                            <th>Goodies</th>
                             <th>Added By</th>
                             <th>Actions</th>
                         </tr>
@@ -112,43 +114,65 @@ if(empty($id))
                             $year = $_POST['year_of_graduation'] ?? '';
                             $registration_type = $_POST['registration_type'] ?? '';
                             
-                            // Add department filter if provided
+                            // Base query
+                            $sql = "SELECT 
+                                v.*, 
+                                COALESCE(a.user_name, m.member_name) AS added_by_name 
+                                FROM vms_visitors v 
+                                LEFT JOIN vms_admin a ON v.added_by = a.id 
+                                LEFT JOIN vms_members m ON v.added_by = m.id 
+                                WHERE 1=1";
+                            
+                            $params = array();
+                            $types = "";
+                            $conditions = array();
+                            
+                            // Add filters with OR logic
                             if (!empty($dept)) {
-                                $sql.= " AND department=?";
+                                $conditions[] = "department=?";
                                 $params[] = $dept;
-                                $types.= "s";
+                                $types .= "s";
                             }
                             
-                            // Add roll number filter if provided
                             if (!empty($roll_number)) {
-                                $sql.= " AND roll_number =?";
+                                $conditions[] = "roll_number=?";
                                 $params[] = $roll_number;
-                                $types.= 's';
+                                $types .= "s";
                             }
                             
-                            // Add name filter if provided
                             if (!empty($name)) {
-                                $sql.= " AND name LIKE?";
-                                $params[] = '%'. $name. '%';
-                                $types.= 's';
+                                $conditions[] = "name LIKE ?";
+                                $params[] = '%' . $name . '%';
+                                $types .= "s";
                             }
                             
-                            // Add year filter if provided
                             if (!empty($year)) {
-                                $sql.= " AND year_of_graduation =?";
+                                $conditions[] = "year_of_graduation=?";
                                 $params[] = $year;
-                                $types.= 'i';
+                                $types .= "i";
                             }
                             
-                            // Add registration type filter if provided
                             if (!empty($registration_type)) {
-                                $sql.= " AND registration_type =?";
+                                $conditions[] = "registration_type=?";
                                 $params[] = $registration_type;
-                                $types.= 's';
+                                $types .= "s";
                             }
+                            
+                            // Add conditions to query if any filters are set
+                            if (!empty($conditions)) {
+                                $sql .= " AND (" . implode(" OR ", $conditions) . ")";
+                            }
+                            
+                            $sql .= " ORDER BY v.roll_number ASC, v.created_at DESC";
                             
                             $stmt = $conn->prepare($sql);
-                            $stmt->bind_param($types,...$params);
+                            if ($stmt === false) {
+                                die('Prepare failed: ' . htmlspecialchars($conn->error));
+                            }
+                            
+                            if (!empty($params)) {
+                                $stmt->bind_param($types, ...$params);
+                            }
                             $stmt->execute();
                             $search_query = $stmt->get_result();
                             
@@ -162,10 +186,24 @@ if(empty($id))
                                     <td><?php echo htmlspecialchars($row['email'] ?? 'N/A');?></td>
                                     <td><?php echo htmlspecialchars($row['mobile'] ?? 'N/A');?></td>
                                     <td><?php echo htmlspecialchars($row['department'] ?? 'N/A');?></td>
+                                    <td><?php echo htmlspecialchars($row['year_of_graduation'] ?? 'N/A');?></td>
                                     <td>
                                         <span class="badge <?php echo $row['status']==1? 'text-bg-success-subtle text-success border border-success' : 'text-bg-danger-subtle text-danger border border-danger';?>">
                                             <?php echo $row['status']==1? 'In' : 'Out';?>
                                         </span>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        // Get goodies for this visitor
+                                        $goodies_result = mysqli_query($conn, "SELECT GROUP_CONCAT(CONCAT(goodie_name, ' (', quantity, ')') SEPARATOR ', ') as goodies_list FROM vms_goodies_distribution WHERE visitor_id = {$row['id']}");
+                                        $goodies_row = mysqli_fetch_assoc($goodies_result);
+                                        $goodies_list = $goodies_row['goodies_list'] ?? '';
+                                        if (!empty($goodies_list)) {
+                                            echo '<span class="badge text-bg-info">' . htmlspecialchars($goodies_list) . '</span>';
+                                        } else {
+                                            echo '<span class="text-muted">None</span>';
+                                        }
+                                        ?>
                                     </td>
                                     <td>
                                         <div class="d-flex gap-2">
@@ -216,10 +254,24 @@ if(empty($id))
                                     <td><?php echo htmlspecialchars($row['email'] ?? 'N/A');?></td>
                                     <td><?php echo isset($row['phone'])? htmlspecialchars($row['phone']) : 'N/A';?></td>
                                     <td><?php echo htmlspecialchars($row['department'] ?? 'N/A');?></td>
+                                    <td><?php echo htmlspecialchars($row['year_of_graduation'] ?? 'N/A');?></td>
                                     <td>
                                         <span class="badge <?php echo $row['status']==1? 'text-bg-success-subtle text-success border border-success' : 'text-bg-danger-subtle text-danger border border-danger';?>">
                                             <?php echo $row['status']==1? 'In' : 'Out';?>
                                         </span>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        // Get goodies for this visitor
+                                        $goodies_result = mysqli_query($conn, "SELECT GROUP_CONCAT(CONCAT(goodie_name, ' (', quantity, ')') SEPARATOR ', ') as goodies_list FROM vms_goodies_distribution WHERE visitor_id = {$row['id']}");
+                                        $goodies_row = mysqli_fetch_assoc($goodies_result);
+                                        $goodies_list = $goodies_row['goodies_list'] ?? '';
+                                        if (!empty($goodies_list)) {
+                                            echo '<span class="badge text-bg-info">' . htmlspecialchars($goodies_list) . '</span>';
+                                        } else {
+                                            echo '<span class="text-muted">None</span>';
+                                        }
+                                        ?>
                                     </td>
                                     <td><?php echo isset($row['added_by_name'])? htmlspecialchars($row['added_by_name']) : 'N/A';?></td>
                                     <td>

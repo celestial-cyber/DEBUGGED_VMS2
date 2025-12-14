@@ -63,8 +63,11 @@ if ($role === 'admin') {
     <?php endif; ?>
 
     <li class="section-label">Event Dashboards</li>
+    <?php if ($role === 'admin'): ?>
     <li><a href="<?php echo $base_url; ?>/admin/nostalgia_dashboard.php" class="<?php echo $current_page == 'nostalgia_dashboard.php' ? 'is-active' : ''; ?>"><i class="fa-solid fa-scroll"></i><span>Nostalgia</span></a></li>
-    <li><a href="<?php echo $base_url; ?>/member/member_notes.php"><i class="fa-regular fa-note-sticky"></i><span>Notes</span></a></li>
+    <?php else: ?>
+    <li><a href="<?php echo $base_url; ?>/member/nostalgia.php" class="<?php echo $current_page == 'nostalgia.php' ? 'is-active' : ''; ?>"><i class="fa-solid fa-scroll"></i><span>Nostalgia</span></a></li>
+    <?php endif; ?>
     <li><a href="#"><i class="fa-solid fa-microphone-lines"></i><span>Alumni Talks</span></a></li>
     <li><a href="#"><i class="fa-solid fa-graduation-cap"></i><span>Induction Program</span></a></li>
     <li><a href="#"><i class="fa-solid fa-briefcase"></i><span>Mock Interviews</span></a></li>

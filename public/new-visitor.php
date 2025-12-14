@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sbt-vstr'])) {
         } else {
             // ✅ Insert into correct columns
             $stmt = $conn->prepare("INSERT INTO vms_visitors 
-                (event_id, full_name, email, phone, address, department, gender, year_of_graduation) 
+                (event_id, name, email, mobile, address, department, gender, year_of_graduation) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
             if ($stmt) {
@@ -129,92 +129,82 @@ if (empty($_SESSION['csrf_token'])) {
         <div class="row g-4">
             <!-- First Name -->
             <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <input type="text" name="first_name" class="form-control" required>
-                    <label>First Name <span class="text-danger">*</span></label>
-                </div>
+                <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                <input type="text" name="first_name" id="first_name" class="form-control" required>
             </div>
             
             <!-- Last Name -->
             <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <input type="text" name="last_name" class="form-control">
-                    <label>Last Name</label>
-                </div>
+                <label for="last_name" class="form-label">Last Name</label>
+                <input type="text" name="last_name" id="last_name" class="form-control">
             </div>
             
             <!-- Email -->
             <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <input type="email" name="email" class="form-control" required>
-                    <label>Email <span class="text-danger">*</span></label>
-                </div>
+                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" name="email" id="email" class="form-control" required>
             </div>
             
             <!-- Phone -->
             <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <input type="tel" name="phone" class="form-control" placeholder="+91 9876543210" required>
-                    <label>Phone <span class="text-danger">*</span></label>
-                </div>
+                <label for="phone" class="form-label">Phone <span class="text-danger">*</span></label>
+                <input type="tel" name="phone" id="phone" class="form-control" placeholder="+91 9876543210" required>
             </div>
             
             <!-- Address -->
             <div class="col-12">
-                <div class="form-floating">
-                    <textarea name="address" class="form-control" required></textarea>
-                    <label>Address <span class="text-danger">*</span></label>
-                </div>
+                <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+                <textarea name="address" id="address" class="form-control" required></textarea>
             </div>
             
             <!-- Department -->
             <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <select name="department" class="form-control" required>
-                        <?php while ($dept = mysqli_fetch_assoc($departments)) { ?>
-                            <option value="<?php echo $dept['department']; ?>"><?php echo $dept['department']; ?></option>
-                        <?php } ?>
-                    </select>
-                    <label>Department <span class="text-danger">*</span></label>
-                </div>
+                <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
+                <select name="department" id="department" class="form-control" required>
+                    <?php 
+                    // Reset the departments result pointer
+                    mysqli_data_seek($departments, 0);
+                    while ($dept = mysqli_fetch_assoc($departments)) { 
+                    ?>
+                        <option value="<?php echo $dept['department']; ?>"><?php echo $dept['department']; ?></option>
+                    <?php } ?>
+                </select>
             </div>
             
             <!-- Event -->
             <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <select name="event_id" class="form-control" required>
-                        <?php while ($event = mysqli_fetch_assoc($events)) { ?>
-                            <option value="<?php echo $event['event_id']; ?>"><?php echo $event['event_name']; ?></option>
-                        <?php } ?>
-                    </select>
-                    <label>Event <span class="text-danger">*</span></label>
-                </div>
+                <label for="event_id" class="form-label">Event <span class="text-danger">*</span></label>
+                <select name="event_id" id="event_id" class="form-control" required>
+                    <?php 
+                    // Reset the events result pointer
+                    mysqli_data_seek($events, 0);
+                    while ($event = mysqli_fetch_assoc($events)) { 
+                    ?>
+                        <option value="<?php echo $event['event_id']; ?>"><?php echo $event['event_name']; ?></option>
+                    <?php } ?>
+                </select>
             </div>
             
             <!-- Gender -->
             <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <select name="gender" class="form-control" required>
-                        <?php $genders = ['Male', 'Female', 'Other']; ?>
-                        <?php foreach ($genders as $gender) { ?>
-                            <option value="<?php echo $gender; ?>"><?php echo $gender; ?></option>
-                        <?php } ?>
-                    </select>
-                    <label>Gender <span class="text-danger">*</span></label>
-                </div>
+                <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                <select name="gender" id="gender" class="form-control" required>
+                    <?php $genders = ['Male', 'Female', 'Other']; ?>
+                    <?php foreach ($genders as $gender_option) { ?>
+                        <option value="<?php echo $gender_option; ?>"><?php echo $gender_option; ?></option>
+                    <?php } ?>
+                </select>
             </div>
             
             <!-- Year of Graduation -->
             <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <select name="year_of_graduation" class="form-control" required>
-                        <?php $years = range(date('Y') - 5, date('Y') + 5); ?>
-                        <?php foreach ($years as $year) { ?>
-                            <option value="<?php echo $year; ?>"><?php echo $year; ?></option>
-                        <?php } ?>
-                    </select>
-                    <label>Year of Graduation <span class="text-danger">*</span></label>
-                </div>
+                <label for="year_of_graduation" class="form-label">Year of Graduation <span class="text-danger">*</span></label>
+                <select name="year_of_graduation" id="year_of_graduation" class="form-control" required>
+                    <?php $years = range(date('Y') - 5, date('Y') + 5); ?>
+                    <?php foreach ($years as $year_option) { ?>
+                        <option value="<?php echo $year_option; ?>"><?php echo $year_option; ?></option>
+                    <?php } ?>
+                </select>
             </div>
         </div>
         

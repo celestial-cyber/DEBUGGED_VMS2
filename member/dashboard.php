@@ -72,6 +72,35 @@ if(isset($_POST['delete_inventory'])){
     }
 }
 
+// Handle Delete Individual Item
+if(isset($_POST['delete_item'])){
+    $item_id = intval($_POST['delete_item_id']);
+    $delete = mysqli_query($conn, "DELETE FROM vms_inventory WHERE id = $item_id");
+    if($delete){
+        // Refresh page to show updated inventory
+        header("Location: dashboard.php");
+        exit();
+    } else {
+        echo "Error deleting item: " . mysqli_error($conn);
+    }
+}
+
+// Handle Edit Item
+if(isset($_POST['edit_item'])){
+    $item_id = intval($_POST['edit_item_id']);
+    $item_name = mysqli_real_escape_string($conn, $_POST['edit_item_name']);
+    $total_stock = intval($_POST['edit_total_stock']);
+    
+    $update = mysqli_query($conn, "UPDATE vms_inventory SET item_name = '$item_name', total_stock = $total_stock WHERE id = $item_id");
+    if($update){
+        // Refresh page to show updated inventory
+        header("Location: dashboard.php");
+        exit();
+    } else {
+        echo "Error updating item: " . mysqli_error($conn);
+    }
+}
+
 // Handle Mark Used
 if(isset($_POST['mark_used'])){
     $item_id = intval($_POST['item_id']);
@@ -182,7 +211,7 @@ body{margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:var
     <div class="crumbs"><a href="dashboard.php">Dashboard</a> › <span>Member</span></div>
     <div class="d-flex align-items-center gap-2">
       <span class="text-muted">Welcome, <?php echo htmlspecialchars($name); ?></span>
-      <a href="logout.php" class="btn btn-soft"><i class="fa-solid fa-right-from-bracket"></i></a>
+      <a href="../logout.php" class="btn btn-soft"><i class="fa-solid fa-right-from-bracket"></i></a>
     </div>
   </div>
 
@@ -267,9 +296,16 @@ body{margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:var
                   <td><?php echo $remaining; ?></td>
                   <td><span class="badge <?php echo $badge_class; ?>"><?php echo htmlspecialchars($item['status'] ?? 'N/A'); ?></span></td>
                   <td>
-                    <?php if($remaining>0){ ?>
-                    <button class="btn btn-sm btn-outline-primary" onclick="openMarkUsedModal('<?php echo $item['id']; ?>','<?php echo htmlspecialchars(addslashes($item['item_name'])); ?>')"><i class="fa-solid fa-box-open me-1"></i>Mark Used</button>
-                    <?php }else{ echo '<span class="text-muted">N/A</span>'; } ?>
+                    <div class="d-flex gap-1">
+                      <button class="btn btn-sm btn-outline-secondary" onclick="openEditModal('<?php echo $item['id']; ?>','<?php echo htmlspecialchars(addslashes($item['item_name'])); ?>', '<?php echo $total; ?>')"><i class="fa-solid fa-edit me-1"></i>Edit</button>
+                      <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this item?')">
+                        <input type="hidden" name="delete_item_id" value="<?php echo $item['id']; ?>">
+                        <button type="submit" name="delete_item" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash me-1"></i>Delete</button>
+                      </form>
+                      <?php if($remaining>0){ ?>
+                      <button class="btn btn-sm btn-outline-primary" onclick="openMarkUsedModal('<?php echo $item['id']; ?>','<?php echo htmlspecialchars(addslashes($item['item_name'])); ?>')"><i class="fa-solid fa-box-open me-1"></i>Mark Used</button>
+                      <?php } ?>
+                    </div>
                   </td>
                 </tr>
                 <?php } ?>
@@ -308,6 +344,19 @@ body{margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:var
   </form>
 </div></div></div>
 
+<!-- Edit Item -->
+<div class="modal fade" id="editItemModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <form method="POST">
+    <div class="modal-header"><h5 class="modal-title">Edit Item</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" name="edit_item_id" id="edit_item_id">
+      <div class="mb-3"><label>Item Name</label><input type="text" name="edit_item_name" id="edit_item_name" class="form-control" required></div>
+      <div class="mb-3"><label>Total Stock</label><input type="number" name="edit_total_stock" id="edit_total_stock" class="form-control" min="0" required></div>
+    </div>
+    <div class="modal-footer"><button type="submit" name="edit_item" class="btn btn-primary">Save Changes</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button></div>
+  </form>
+</div></div></div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Sidebar toggle
@@ -323,6 +372,14 @@ function openMarkUsedModal(id,name){
   document.getElementById('item_id').value=id;
   document.getElementById('item_name').value=name;
   new bootstrap.Modal(document.getElementById('markUsedModal')).show();
+}
+
+// Edit item modal
+function openEditModal(id,name,totalStock){
+  document.getElementById('edit_item_id').value=id;
+  document.getElementById('edit_item_name').value=name;
+  document.getElementById('edit_total_stock').value=totalStock;
+  new bootstrap.Modal(document.getElementById('editItemModal')).show();
 }
 </script>
 </body>

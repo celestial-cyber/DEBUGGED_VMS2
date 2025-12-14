@@ -17,9 +17,9 @@ if (file_exists($config_file)) {
 } else {
     // Fallback to hardcoded values (not recommended for production)
     $server = "localhost";
-    $username = "root";
-    $password = "Sowmith@0707";
-    $databasename = "vms_db";
+$username = "root";
+$password = "root@123";      // usually empty with command line setup
+$databasename = "vms_db";
 }
 
 // Try socket (localhost) first. If it fails because the MySQL socket

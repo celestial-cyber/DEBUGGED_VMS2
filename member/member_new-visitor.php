@@ -37,9 +37,8 @@ if (isset($_POST['sbt-vstr'])) {
     $phoneCol = $hasMobile ? 'mobile' : 'phone';
 
     $insert_visitor = mysqli_query($conn, "
-        INSERT INTO vms_visitors (event_id, full_name, email, $phoneCol, address, department, gender, roll_number,year_of_graduation, in_time)
-VALUES ('$event_id', '$fullname', '$email', '$phone', '$address', '$department', '$gender', '$roll_number' ,'$year', NOW())
-
+        INSERT INTO vms_visitors (event_id, name, email, $phoneCol, address, department, gender, roll_number, year_of_graduation, added_by, in_time, visitor_type, registration_type)
+        VALUES ('$event_id', '$fullname', '$email', '$phone', '$address', '$department', '$gender', '$roll_number', '$year', '$id', NOW(), 'regular', 'beforehand')
     ");
 
     if ($insert_visitor) {

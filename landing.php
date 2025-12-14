@@ -8,29 +8,110 @@ $alumni_success = false;
 
 // Handle login form submission
 if (isset($_POST['login_btn'])) {
-    $email = $_POST['email'];
-    $pwd   = md5($_POST['pwd']);
+    $email = trim($_POST['email']);
+    $pwd   = $_POST['pwd']; // Get plain text password
     $role  = $_POST['role'];
 
-    if ($role === "admin") {
-        $select_query = mysqli_query($conn, "SELECT id, user_name FROM vms_admin WHERE emailid='$email' AND password='$pwd'");
-    } else {
-        $select_query = mysqli_query($conn, "SELECT id, member_name FROM vms_members WHERE emailid='$email' AND password='$pwd'");
+    // Debug: Log the attempt
+    if (isset($_GET['debug']) && $_GET['debug'] == '1') {
+        echo '<div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-left: 4px solid #007cba;">';
+        echo '<strong>DEBUG LOGIN ATTEMPT:</strong><br>';
+        echo 'Email: ' . htmlspecialchars($email) . '<br>';
+        echo 'Password length: ' . strlen($pwd) . '<br>';
+        echo 'Role: ' . htmlspecialchars($role) . '<br>';
+        echo 'Session status: ' . session_status() . '<br>';
+        echo '</div>';
     }
 
-    if (mysqli_num_rows($select_query) > 0) {
-        $username = mysqli_fetch_row($select_query);
-        $_SESSION['id']   = $username[0];
-        $_SESSION['name'] = $username[1];
+    if ($role === "admin") {
+        $stmt = mysqli_prepare($conn, "SELECT id, user_name, password FROM vms_admin WHERE emailid = ?");
+        mysqli_stmt_bind_param($stmt, "s", $email);
+    } else {
+        $stmt = mysqli_prepare($conn, "SELECT id, member_name, password FROM vms_members WHERE emailid = ?");
+        mysqli_stmt_bind_param($stmt, "s", $email);
+    }
+
+    mysqli_stmt_execute($stmt);
+    $select_query = mysqli_stmt_get_result($stmt);
+
+    // Debug: Check query result
+    if (isset($_GET['debug']) && $_GET['debug'] == '1') {
+        echo '<div style="background: #e8f5e9; padding: 10px; margin: 10px 0; border-left: 4px solid #4caf50;">';
+        echo '<strong>DEBUG QUERY RESULT:</strong><br>';
+        echo 'Rows found: ' . mysqli_num_rows($select_query) . '<br>';
+        if (mysqli_num_rows($select_query) > 0) {
+            $user_data = mysqli_fetch_assoc($select_query);
+            echo 'User ID: ' . $user_data['id'] . '<br>';
+            echo 'User Name: ' . ($role === "admin" ? $user_data['user_name'] : $user_data['member_name']) . '<br>';
+            echo 'Stored Hash: ' . $user_data['password'] . '<br>';
+            echo 'Entered MD5: ' . md5(trim($pwd)) . '<br>';
+            echo 'Match: ' . (md5(trim($pwd)) === $user_data['password'] ? 'YES' : 'NO') . '<br>';
+            // Reset pointer for actual processing
+            mysqli_data_seek($select_query, 0);
+        }
+        echo '</div>';
+    }
+
+   if (mysqli_num_rows($select_query) > 0) {
+
+    $user_data = mysqli_fetch_assoc($select_query);
+
+    // Convert entered password to MD5
+    $entered_pwd = md5(trim($pwd));
+
+    // Compare MD5 hashes
+    if ($entered_pwd === $user_data['password']) {
+
+        // Debug: Successful login
+        if (isset($_GET['debug']) && $_GET['debug'] == '1') {
+            echo '<div style="background: #c8e6c9; padding: 10px; margin: 10px 0; border-left: 4px solid #2e7d32;">';
+            echo '<strong>DEBUG: LOGIN SUCCESSFUL</strong><br>';
+            echo 'Setting session variables...<br>';
+            echo 'Redirecting to: ' . $dashboard_link . '<br>';
+            echo '</div>';
+        }
+
+        $_SESSION['id']   = $user_data['id'];
+        $_SESSION['name'] = ($role === "admin")
+            ? $user_data['user_name']
+            : $user_data['member_name'];
         $_SESSION['role'] = $role;
 
         // Redirect to dashboard
-        $dashboard_link = ($role === 'admin') ? "admin/dashboard.php" : "member/dashboard.php";
+        $dashboard_link = ($role === 'admin')
+            ? "admin/dashboard.php"
+            : "member/dashboard.php";
+
         header("Location: $dashboard_link");
         exit();
+
     } else {
+        // Password mismatch
         $login_error = true;
+
+        if (isset($_GET['debug']) && $_GET['debug'] == '1') {
+            echo '<div class="error-message">';
+            echo '<strong>Debug:</strong><br>';
+            echo 'Email found, but password mismatch.<br>';
+            echo 'Entered MD5: ' . htmlspecialchars($entered_pwd) . '<br>';
+            echo 'DB MD5: ' . htmlspecialchars($user_data['password']) . '<br>';
+            echo '</div>';
+        }
     }
+
+} else {
+    // Email not found
+    $login_error = true;
+
+    if (isset($_GET['debug']) && $_GET['debug'] == '1') {
+        echo '<div class="error-message">';
+        echo '<strong>Debug:</strong><br>';
+        echo 'Email not found in database.<br>';
+        echo 'Tried email: ' . htmlspecialchars($email) . '<br>';
+        echo 'Role: ' . htmlspecialchars($role) . '<br>';
+        echo '</div>';
+    }
+}
 }
 
 // Handle alumni registration submission
@@ -287,6 +368,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-container input {
+            flex: 1;
+            padding-right: 40px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
         .role-selection {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -398,8 +506,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
 
         <!-- Tab Navigation -->
         <div class="tabs">
-            <button class="tab-button active" onclick="switchTab('alumni')">Alumni Registration</button>
-            <button class="tab-button" onclick="switchTab('login')">Staff Login</button>
+            <button type="button" class="tab-button active" onclick="switchTab('alumni')">Alumni Registration</button>
+            <button type="button" class="tab-button" onclick="switchTab('login')">Staff Login</button>
         </div>
 
         <!-- Alumni Registration Tab -->
@@ -484,14 +592,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
         <!-- Staff Login Tab -->
         <div id="login-tab" class="tab-content">
             <div class="role-selection">
-                <button class="role-btn admin-btn" onclick="setRole('admin')">Admin Login</button>
-                <button class="role-btn member-btn" onclick="setRole('member')">Member Login</button>
+                <button type="button" class="role-btn admin-btn"
+        onclick="setRole('admin', this)">Admin Login</button>
+
+<button type="button" class="role-btn member-btn"
+        onclick="setRole('member', this)">Member Login</button>
+
             </div>
 
             <?php if ($login_error): ?>
                 <div class="error-message">
                     <i class="fas fa-exclamation-circle"></i>
                     <p>Invalid email or password. Please try again.</p>
+                    <?php if (isset($_GET['debug']) && $_GET['debug'] == '1'): ?>
+                        <div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; text-align: left; font-size: 12px;">
+                            <strong>Debug Info:</strong><br>
+                            Last attempted login details will appear here after submission.
+                        </div>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 
@@ -502,7 +620,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
                 </div>
                 <div class="form-group">
                     <label>Password *</label>
-                    <input type="password" name="pwd" placeholder="Enter your password" required>
+                    <div class="password-container">
+                        <input type="password" name="pwd" id="password" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" id="password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <input type="hidden" name="role" id="role" value="admin">
                 <button type="submit" name="login_btn" class="btn-submit">Login</button>
@@ -533,12 +656,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
             event.target.classList.add('active');
         }
 
-        function setRole(role) {
-            document.getElementById('role').value = role;
-            const buttons = document.querySelectorAll('.role-btn');
-            buttons.forEach(btn => btn.classList.remove('selected'));
-            event.target.classList.add('selected');
-        }
+       function setRole(role, el) {
+    document.getElementById('role').value = role;
+
+    document.querySelectorAll('.role-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+
+    el.classList.add('selected');
+}
+
 
         function resetAlumniForm() {
             location.reload();
@@ -549,6 +676,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
             const adminBtn = document.querySelector('.admin-btn');
             if (adminBtn) {
                 adminBtn.classList.add('selected');
+            }
+        });
+
+        // Password visibility toggle
+        document.getElementById('password-toggle').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
             }
         });
     </script>

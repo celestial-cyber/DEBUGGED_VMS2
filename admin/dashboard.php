@@ -308,7 +308,10 @@ $notes_actions = mysqli_query($conn, "SELECT * FROM vms_coordinator_notes WHERE 
               <i class="fa-solid fa-boxes-stacked text-success"></i>
               <span class="fw-semibold">Inventory</span>
             </div>
-            <button class="btn btn-sm btn-soft" data-bs-toggle="modal" data-bs-target="#addInventoryModal"><i class="fa-solid fa-plus me-1"></i>Add Item</button>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-soft" data-bs-toggle="modal" data-bs-target="#addInventoryModal"><i class="fa-solid fa-plus me-1"></i>Add Item</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteAllInventory()"><i class="fa-solid fa-trash-can me-1"></i>Delete All</button>
+            </div>
           </div>
           <div class="card-body">
             <div class="table-responsive">
@@ -319,10 +322,13 @@ $notes_actions = mysqli_query($conn, "SELECT * FROM vms_coordinator_notes WHERE 
                     <th>In Stock</th>
                     <th>Used</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <?php while($item = mysqli_fetch_assoc($inventory)) { 
+                  <?php 
+                  mysqli_data_seek($inventory, 0); // Reset pointer
+                  while($item = mysqli_fetch_assoc($inventory)) { 
                     $remaining = $item['total_stock'] - $item['used_count'];
                     $status_class = '';
                     if ($remaining <= 0) {
@@ -338,6 +344,16 @@ $notes_actions = mysqli_query($conn, "SELECT * FROM vms_coordinator_notes WHERE 
                     <td><?php echo $item['total_stock']; ?></td>
                     <td><?php echo $item['used_count']; ?></td>
                     <td><span class="badge <?php echo $status_class; ?>"><?php echo $item['status']; ?></span></td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary btn-sm" onclick="editInventoryItem(<?php echo $item['id']; ?>, '<?php echo addslashes($item['item_name']); ?>', <?php echo $item['total_stock']; ?>, <?php echo $item['used_count']; ?>)">
+                          <i class="fa-solid fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteInventoryItem(<?php echo $item['id']; ?>, '<?php echo addslashes($item['item_name']); ?>')">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                   <?php } ?>
                 </tbody>
@@ -487,6 +503,39 @@ $notes_actions = mysqli_query($conn, "SELECT * FROM vms_coordinator_notes WHERE 
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-primary" onclick="addInventoryItem()">Add Item</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Inventory Modal -->
+  <div class="modal fade" id="editInventoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Inventory Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editInventoryForm">
+            <input type="hidden" name="edit_item_id" id="edit_item_id">
+            <div class="mb-3">
+              <label class="form-label">Item Name</label>
+              <input type="text" class="form-control" name="edit_item_name" id="edit_item_name" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Total Stock</label>
+              <input type="number" class="form-control" name="edit_total_stock" id="edit_total_stock" min="0" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Used Count</label>
+              <input type="number" class="form-control" name="edit_used_count" id="edit_used_count" min="0" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="updateInventoryItem()">Update Item</button>
         </div>
       </div>
     </div>
@@ -651,7 +700,7 @@ $notes_actions = mysqli_query($conn, "SELECT * FROM vms_coordinator_notes WHERE 
       const form = document.getElementById('inventoryForm');
       const formData = new FormData(form);
       
-      fetch('../actions/add_inventory.php', {
+      fetch('../actions/add_inventory_ajax.php', {
         method: 'POST',
         body: formData
       })
@@ -755,6 +804,83 @@ $notes_actions = mysqli_query($conn, "SELECT * FROM vms_coordinator_notes WHERE 
       .catch(error => {
         alert('Error creating event');
       });
+    }
+
+    // Inventory management functions
+    function editInventoryItem(id, name, totalStock, usedCount) {
+      document.getElementById('edit_item_id').value = id;
+      document.getElementById('edit_item_name').value = name;
+      document.getElementById('edit_total_stock').value = totalStock;
+      document.getElementById('edit_used_count').value = usedCount;
+      
+      const modal = new bootstrap.Modal(document.getElementById('editInventoryModal'));
+      modal.show();
+    }
+
+    function updateInventoryItem() {
+      const form = document.getElementById('editInventoryForm');
+      const formData = new FormData(form);
+      
+      fetch('../actions/update_inventory.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Inventory item updated successfully!');
+          location.reload();
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        alert('Error updating inventory item');
+      });
+    }
+
+    function deleteInventoryItem(id, name) {
+      if (confirm(`Are you sure you want to delete "${name}" from inventory?`)) {
+        fetch('../actions/delete_inventory.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `item_id=${id}`
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Inventory item deleted successfully!');
+            location.reload();
+          } else {
+            alert('Error: ' + data.message);
+          }
+        })
+        .catch(error => {
+          alert('Error deleting inventory item');
+        });
+      }
+    }
+
+    function deleteAllInventory() {
+      if (confirm('Are you sure you want to delete ALL inventory items? This action cannot be undone!')) {
+        fetch('../actions/delete_all_inventory.php', {
+          method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('All inventory items deleted successfully!');
+            location.reload();
+          } else {
+            alert('Error: ' + data.message);
+          }
+        })
+        .catch(error => {
+          alert('Error deleting inventory items');
+        });
+      }
     }
   </script>
 </body>

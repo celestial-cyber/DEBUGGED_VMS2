@@ -208,13 +208,14 @@ ON DUPLICATE KEY UPDATE user_name=VALUES(user_name);
 
 -- Insert sample departments
 INSERT INTO vms_department (department) VALUES 
-  ('Computer Science'), 
-  ('Electronics'), 
+  ('CSE'), 
+  ('ECE'), 
   ('Mechanical'), 
   ('Civil'), 
-  ('Electrical'), 
+  ('EEE'), 
   ('Chemical'), 
-  ('Biotechnology'), 
+  ('AIML'), 
+   ('AIDS'), 
   ('Management')
 ON DUPLICATE KEY UPDATE department=VALUES(department);
 
