@@ -9,12 +9,6 @@ if(empty($id))
     exit();
 }
 
-// Check for success message
-$success_message = '';
-if (isset($_GET['success']) && $_GET['success'] == '1') {
-    $success_message = 'Visitor registered successfully!';
-}
-
 // ----- POST handlers (centralized) -----
 // Handle visitor deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_visitor_id'])) {
@@ -61,14 +55,6 @@ $offset = ($page - 1) * $perPage;
 
 <!-- Content -->
 <div class="container-fluid">
-    <?php if (!empty($success_message)): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            <?php echo htmlspecialchars($success_message); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    
     <!-- Header -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
         <div class="title-row">

@@ -18,6 +18,7 @@ $events = $conn->query("SELECT event_id, event_name FROM vms_events");
 // Initialize variables
 $popup_message = '';
 $popup_type = '';
+$show_success_modal = false;
 
 // Check for success parameter in URL
 if (isset($_GET['success']) && $_GET['success'] == '1') {
@@ -33,11 +34,15 @@ if (isset($_GET['error']) && $_GET['error'] == '1') {
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sbt-vstr'])) {
+    // Debug: Log that form was submitted
+    error_log("Form submitted - Method: " . $_SERVER['REQUEST_METHOD']);
+    error_log("POST data: " . print_r($_POST, true));
     
     // Validate CSRF token first
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $popup_message = 'Invalid CSRF token. Please refresh the page and try again.';
         $popup_type = 'danger';
+        error_log("CSRF token validation failed");
     } else {
         // Retrieve and sanitize form data
         $first_name = htmlspecialchars($_POST['first_name'] ?? '');
@@ -61,10 +66,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sbt-vstr'])) {
         if (empty($full_name) || empty($email) || empty($phone) || empty($event_id)) {
             $popup_message = 'Please fill in all required fields.';
             $popup_type = 'warning';
+            error_log("Validation failed: full_name=$full_name, email=$email, phone=$phone, event_id=$event_id");
         } elseif (empty($added_by)) {
             $popup_message = 'Admin not logged in. Please login to add visitors.';
             $popup_type = 'danger';
+            error_log("Admin not logged in: added_by=$added_by");
         } else {
+            error_log("Validation passed, proceeding with database insertion");
             // Default values for other fields
             $in_time = date('Y-m-d H:i:s');
             $visitor_type = 'regular';
@@ -96,14 +104,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sbt-vstr'])) {
                 );
 
                 if ($stmt->execute()) {
-                    $popup_message = "Visitor registered successfully!";
-                    $popup_type = "success";
+                    $show_success_modal = true;
                     $_POST = array(); // Clear POST data
-                    header("Location: ../admin/manage-visitors.php?success=1");
-                    exit();
+                    error_log("Database insertion successful, show_success_modal set to true");
                 } else {
                     $popup_message = "Error saving visitor: " . $stmt->error;
                     $popup_type = "danger";
+                    error_log("Database insertion failed: " . $stmt->error);
                 }
 
                 $stmt->close();
@@ -610,6 +617,35 @@ if (empty($_SESSION['csrf_token'])) {
         </div>
     </div>
 
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="successModalLabel">
+                        <i class="fas fa-check-circle me-2"></i>Registration Successful!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-check text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="text-success mb-3">Visitor Registered Successfully!</h4>
+                    <p class="text-muted mb-4">The visitor has been added to the system and is now available in the visitor management section.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-plus me-2"></i>Add Another Visitor
+                    </button>
+                    <a href="../admin/manage-visitors.php" class="btn btn-primary">
+                        <i class="fas fa-users me-2"></i>View All Visitors
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script>
 // Clear form on page load to prevent any pre-filled values
 document.addEventListener('DOMContentLoaded', function() {
@@ -675,4 +711,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Show success modal if registration was successful
+<?php if ($show_success_modal): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Showing success modal');
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    successModal.show();
+});
+<?php else: ?>
+console.log('show_success_modal is false');
+<?php endif; ?>
 </script>
