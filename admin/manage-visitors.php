@@ -9,6 +9,12 @@ if(empty($id))
     exit();
 }
 
+// Check for success message
+$success_message = '';
+if (isset($_GET['success']) && $_GET['success'] == '1') {
+    $success_message = 'Visitor registered successfully!';
+}
+
 // ----- POST handlers (centralized) -----
 // Handle visitor deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_visitor_id'])) {
@@ -55,6 +61,14 @@ $offset = ($page - 1) * $perPage;
 
 <!-- Content -->
 <div class="container-fluid">
+    <?php if (!empty($success_message)): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <?php echo htmlspecialchars($success_message); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    
     <!-- Header -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
         <div class="title-row">
@@ -140,6 +154,9 @@ $offset = ($page - 1) * $perPage;
                             <th>Mobile</th>
                             <th>Department</th>
                             <th>Status</th>
+                            <th>In Time</th>
+                            <th>Out Time</th>
+                            <th>Goodies Provided</th>
                             <th>Added By</th>
                             <th>Actions</th>
                         </tr>
@@ -182,11 +199,17 @@ $offset = ($page - 1) * $perPage;
                             }
 
                             // Main select with ordering and limit
-                            $sql = "SELECT v.*, COALESCE(a.user_name, m.member_name) AS added_by_name FROM vms_visitors v LEFT JOIN vms_admin a ON v.added_by = a.id LEFT JOIN vms_members m ON v.added_by = m.id" . $where . " ORDER BY v.roll_number ASC, v.created_at DESC LIMIT $offset,$perPage";
+                            $sql = "SELECT v.*, COALESCE(a.user_name, m.member_name) AS added_by_name, 
+                                   GROUP_CONCAT(CONCAT(gd.goodie_name, ' (', gd.quantity, ')') SEPARATOR ', ') as goodies_list 
+                                   FROM vms_visitors v 
+                                   LEFT JOIN vms_admin a ON v.added_by = a.id 
+                                   LEFT JOIN vms_members m ON v.added_by = m.id 
+                                   LEFT JOIN vms_goodies_distribution gd ON v.id = gd.visitor_id" . 
+                                   $where . " GROUP BY v.id ORDER BY v.roll_number ASC, v.created_at DESC LIMIT $offset,$perPage";
 
                             $stmt = $conn->prepare($sql);
                             if (!$stmt) {
-                                echo "<tr><td colspan=9 class='text-danger'>Query prepare failed: " . htmlspecialchars($conn->error) . "</td></tr>";
+                                echo "<tr><td colspan=12 class='text-danger'>Query prepare failed: " . htmlspecialchars($conn->error) . "</td></tr>";
                             } else {
                                 if (!empty($params)) { $stmt->bind_param($types, ...$params); }
                                 $stmt->execute();
@@ -207,6 +230,9 @@ $offset = ($page - 1) * $perPage;
                                             <?php echo $row['status']==1 ? 'In' : 'Out'; ?>
                                         </span>
                                     </td>
+                                    <td><?php echo !empty($row['in_time']) ? date('M j, Y H:i', strtotime($row['in_time'])) : 'Not Checked In'; ?></td>
+                                    <td><?php echo !empty($row['out_time']) ? date('M j, Y H:i', strtotime($row['out_time'])) : 'Not Checked Out'; ?></td>
+                                    <td><?php echo !empty($row['goodies_list']) ? htmlspecialchars($row['goodies_list']) : 'None'; ?></td>
                                     <td>
                                         <div class="d-flex gap-2">
                                             <a href="edit-visitor.php?id=<?php echo $row['id'];?>" class="btn btn-sm btn-outline-primary">
@@ -248,7 +274,13 @@ $offset = ($page - 1) * $perPage;
                             }
                             $totalPages = max(1, (int)ceil($totalRows / $perPage));
 
-                            $select_query = mysqli_query($conn, "SELECT v.*, COALESCE(a.user_name, m.member_name) AS added_by_name FROM vms_visitors v LEFT JOIN vms_admin a ON v.added_by = a.id LEFT JOIN vms_members m ON v.added_by = m.id ORDER BY v.roll_number ASC, v.created_at DESC LIMIT $offset,$perPage");
+                            $select_query = mysqli_query($conn, "SELECT v.*, COALESCE(a.user_name, m.member_name) AS added_by_name, 
+                                                       GROUP_CONCAT(CONCAT(gd.goodie_name, ' (', gd.quantity, ')') SEPARATOR ', ') as goodies_list 
+                                                       FROM vms_visitors v 
+                                                       LEFT JOIN vms_admin a ON v.added_by = a.id 
+                                                       LEFT JOIN vms_members m ON v.added_by = m.id 
+                                                       LEFT JOIN vms_goodies_distribution gd ON v.id = gd.visitor_id 
+                                                       GROUP BY v.id ORDER BY v.roll_number ASC, v.created_at DESC LIMIT $offset,$perPage");
                             $sn = $offset + 1;
                             while($row = mysqli_fetch_array($select_query))
                             {
@@ -258,13 +290,16 @@ $offset = ($page - 1) * $perPage;
                                     <td><?php echo htmlspecialchars($row['roll_number'] ?? 'N/A'); ?></td>
                                         <td><?php echo htmlspecialchars($row['name'] ?? 'N/A'); ?></td>
                                             <td><?php echo htmlspecialchars($row['email'] ?? 'N/A'); ?></td>
-                                    <td><?php echo isset($row['phone']) ? htmlspecialchars($row['phone']) : 'N/A'; ?></td>
+                                    <td><?php echo isset($row['mobile']) ? htmlspecialchars($row['mobile']) : 'N/A'; ?></td>
                                     <td><?php echo htmlspecialchars($row['department'] ?? 'N/A'); ?></td>
                                     <td>
                                         <span class="badge <?php echo $row['status']==1 ? 'text-bg-success-subtle text-success border border-success' : 'text-bg-danger-subtle text-danger border border-danger'; ?>">
                                             <?php echo $row['status']==1 ? 'In' : 'Out'; ?>
                                         </span>
                                     </td>
+                                    <td><?php echo !empty($row['in_time']) ? date('M j, Y H:i', strtotime($row['in_time'])) : 'Not Checked In'; ?></td>
+                                    <td><?php echo !empty($row['out_time']) ? date('M j, Y H:i', strtotime($row['out_time'])) : 'Not Checked Out'; ?></td>
+                                    <td><?php echo !empty($row['goodies_list']) ? htmlspecialchars($row['goodies_list']) : 'None'; ?></td>
                                     <td><?php echo isset($row['added_by_name']) ? htmlspecialchars($row['added_by_name']) : 'N/A'; ?></td>
                                     <td>
                                         <div class="d-flex gap-2">
@@ -272,6 +307,7 @@ $offset = ($page - 1) * $perPage;
                                                 <i class="fa-solid fa-pencil me-1"></i><?php echo $row['status']==1 ? 'Edit' : 'View'; ?>
                                             </a>
                                             <form method="POST" action="manage-visitors.php" onsubmit="return confirmDelete()">
+                                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                                                 <input type="hidden" name="delete_visitor_id" value="<?php echo $row['id']; ?>">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                                     <i class="fa-solid fa-trash me-1"></i>Delete
@@ -290,7 +326,7 @@ $offset = ($page - 1) * $perPage;
                     Showing <?php if (!empty($totalRows)) { echo ($offset+1) . ' - ' . min($offset+$perPage, $totalRows) . ' of ' . $totalRows; } else { echo '0 visitors'; } ?>
                 </span>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-download me-1"></i>Export</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="window.location.href='../exports/export_visitors.php'"><i class="fa-solid fa-download me-1"></i>Export</button>
                     <?php if (!isset($_REQUEST['srh-btn']) && !empty($totalPages) && $totalPages > 1): ?>
                         <nav aria-label="Page navigation">
                             <ul class="pagination mb-0">

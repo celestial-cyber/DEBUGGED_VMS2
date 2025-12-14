@@ -29,10 +29,9 @@ if (!$inventory) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_inventory'])) {
     $item_name = htmlspecialchars($_POST['item_name']);
     $quantity = (int)$_POST['quantity'];
-    $description = htmlspecialchars($_POST['description']);
     
-    $update_stmt = $conn->prepare("UPDATE vms_inventory SET item_name = ?, quantity = ?, description = ? WHERE id = ?");
-    $update_stmt->bind_param("sisi", $item_name, $quantity, $description, $id);
+    $update_stmt = $conn->prepare("UPDATE vms_inventory SET item_name = ?, total_stock = ? WHERE id = ?");
+    $update_stmt->bind_param("sii", $item_name, $quantity, $id);
     
     if ($update_stmt->execute()) {
         $_SESSION['success_msg'] = "Inventory item updated successfully!";
@@ -44,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_inventory'])) 
 }
 
 include __DIR__ . '/../includes/header.php';
-include __DIR__ . '/../includes/top-bar.php';
+// Top bar is already included in header.php, so we don't need top-bar.php
 ?>
 
 <!-- Content -->
@@ -79,15 +78,8 @@ include __DIR__ . '/../includes/top-bar.php';
                     <div class="col-md-6">
                         <div class="form-floating">
                             <input type="number" class="form-control" id="quantity" name="quantity" 
-                                   value="<?php echo (int)$inventory['quantity']; ?>" required min="0">
-                            <label for="quantity">Quantity</label>
-                        </div>
-                    </div>
-
-                    <div class="col-12">
-                        <div class="form-floating">
-                            <textarea class="form-control" id="description" name="description" style="height: 100px"><?php echo htmlspecialchars($inventory['description']); ?></textarea>
-                            <label for="description">Description</label>
+                                   value="<?php echo (int)$inventory['total_stock']; ?>" required min="0">
+                            <label for="quantity">Total Stock</label>
                         </div>
                     </div>
 

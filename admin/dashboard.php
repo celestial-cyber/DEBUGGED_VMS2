@@ -21,7 +21,7 @@ $visitors = mysqli_query($conn, "SELECT * FROM vms_visitors ORDER BY created_at 
 $inventory = mysqli_query($conn, "SELECT * FROM vms_inventory ORDER BY status, item_name");
 
 // ================= Goodies Distribution =================
-$goodies = mysqli_query($conn, "SELECT g.*, v.name as visitor_name FROM vms_goodies_distribution g LEFT JOIN vms_visitors v ON g.visitor_id = v.id ORDER BY g.distribution_time DESC LIMIT 10");
+$goodies = mysqli_query($conn, "SELECT g.*, v.name as visitor_name FROM vms_goodies_distribution g LEFT JOIN vms_visitors v ON g.visitor_id = v.id WHERE g.visitor_id IS NOT NULL ORDER BY g.distribution_time DESC LIMIT 10");
 
 // ================= Event Participation =================
 $participation = mysqli_query($conn, "SELECT * FROM vms_event_participation ORDER BY participant_count DESC");
@@ -159,10 +159,10 @@ $notes_actions = mysqli_query($conn, "SELECT * FROM vms_coordinator_notes WHERE 
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <span class="logo"><i class="fa-solid fa-bullseye text-white"></i></span>
-      <span>VMS Console</span>
-    </div>
+  <div class="brand">
+    <img src="../assets/images/SALogo.png" alt="Specanciens Logo" style="width:50px; height:50px; border-radius:8px; object-fit:cover; margin-left:-15px;">
+    <span>SPECANCIENS VMS</span>
+  </div>
     <ul class="nav">
       <li><a href="dashboard.php" class="is-active"><i class="fa-solid fa-house"></i><span>Admin Dashboard</span></a></li>
       <li><a href="../public/new-visitor.php"><i class="fa-solid fa-user-plus"></i><span>New Visitor</span></a></li>
@@ -190,7 +190,7 @@ $notes_actions = mysqli_query($conn, "SELECT * FROM vms_coordinator_notes WHERE 
         <span class="text-muted">Welcome, <?php echo $name; ?></span>
         <button class="btn btn-soft"><i class="fa-regular fa-bell"></i></button>
         <button class="btn btn-soft"><i class="fa-regular fa-circle-question"></i></button>
-        <a href="logout.php" class="btn btn-soft"><i class="fa-solid fa-right-from-bracket"></i></a>
+        <a href="../logout.php" class="btn btn-soft"><i class="fa-solid fa-right-from-bracket"></i></a>
       </div>
     </div>
 

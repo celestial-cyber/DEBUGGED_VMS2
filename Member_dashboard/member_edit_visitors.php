@@ -93,9 +93,9 @@ if(isset($_POST['sv-vstr'])) {
                         <div class="col-lg-6">
                             <input type="text" name="fullname" class="form-control"
                                 value="<?php echo htmlspecialchars($row['name']);?>"
-                                pattern="[A-Za-z ]{3,50}"
-                                title="3-50 alphabetic characters" required>
-                            <div class="invalid-feedback">Please enter a valid name (3-50 letters)</div>
+                                minlength="2" maxlength="100"
+                                title="Enter a valid name (2-100 characters)" required>
+                            <div class="invalid-feedback">Please enter a valid name (2-100 characters)</div>
                         </div>
                     </div>
                     <!-- Email -->
@@ -219,21 +219,46 @@ if(isset($_POST['sv-vstr'])) {
 </div>
 <!-- Popup -->
 <?php if($popup_message!= '') {?>
-<div class="modal fade" id="visitorPopup" tabindex="-1">
+<div class="modal fade" id="visitorPopup" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-<?php echo $popup_type;?>">
-      <div class="modal-body text-<?php echo $popup_type;?>">
-        <?php echo $popup_message;?>
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-<?php echo $popup_type ?: 'primary'; ?> text-white">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-<?php echo $popup_type === 'success' ? 'check-circle' : ($popup_type === 'danger' ? 'exclamation-triangle' : 'info-circle'); ?> me-2"></i>
+          <?php echo ucfirst($popup_type ?: 'Info'); ?>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-<?php echo $popup_type ?: 'dark'; ?>">
+        <div class="d-flex align-items-center">
+          <i class="fa-solid fa-<?php echo $popup_type === 'success' ? 'check-circle' : ($popup_type === 'danger' ? 'exclamation-triangle' : 'info-circle'); ?> fa-2x me-3 text-<?php echo $popup_type ?: 'primary'; ?>"></i>
+          <span><?php echo htmlspecialchars($popup_message ?? ''); ?></span>
+        </div>
       </div>
       <div class="modal-footer">
-        <a href="member_manage_visitors.php" class="btn btn-<?php echo $popup_type;?>">OK</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue Editing</button>
+        <a href="member_manage_visitors.php" class="btn btn-<?php echo $popup_type ?: 'primary'; ?>">Back to Visitors</a>
       </div>
     </div>
   </div>
 </div>
 <script>
-    var popup = new bootstrap.Modal(document.getElementById('visitorPopup'));
-    popup.show();
+    // Ensure Bootstrap is loaded before showing modal
+    document.addEventListener('DOMContentLoaded', function() {
+        var popupModalElement = document.getElementById('visitorPopup');
+        if (popupModalElement && typeof bootstrap !== 'undefined') {
+            var popupModal = new bootstrap.Modal(popupModalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            popupModal.show();
+        } else {
+            // Fallback: show alert if Bootstrap modal fails
+            setTimeout(function() {
+                alert('<?php echo addslashes($popup_message ?? ''); ?>');
+            }, 500);
+        }
+    });
 </script>
 <?php }?>
 <a class="scroll-to-top rounded" href="#page-top">

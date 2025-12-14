@@ -55,11 +55,11 @@ if(isset($_POST['sbt-inv'])) {
 <body id="page-top">
   <?php
   $breadcrumbs = [
-      ['url' => 'admin/dashboard.php', 'text' => 'Dashboard'],
-      ['url' => 'manage-inventory.php', 'text' => 'Inventory'],
+      ['url' => '../admin/dashboard.php', 'text' => 'Dashboard'],
+      ['url' => '../admin/manage-inventory.php', 'text' => 'Inventory'],
       ['text' => 'Add Inventory Item']
   ];
-  include __DIR__ . '/../includes/top-bar.php';
+  // Top bar is already included in header.php, so we don't need top-bar.php
   ?>
   <div id="wrapper">
     <?php include __DIR__ . '/../includes/sidebar.php'; ?>
@@ -74,7 +74,7 @@ if(isset($_POST['sbt-inv'])) {
           <span class="badge">Live Form</span>
         </div>
         <div class="d-flex gap-2">
-          <button class="btn btn-outline-primary" onclick="location.href='manage-inventory.php'"><i class="fa-solid fa-warehouse me-2"></i>View All</button>
+          <button class="btn btn-outline-primary" onclick="location.href='../admin/manage-inventory.php'"><i class="fa-solid fa-warehouse me-2"></i>View All</button>
           <button class="btn btn-outline-secondary" onclick="location.reload()"><i class="fa-solid fa-arrow-rotate-right me-2"></i>Reset</button>
         </div>
       </div>

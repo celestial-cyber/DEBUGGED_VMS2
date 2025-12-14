@@ -15,7 +15,6 @@ $breadcrumbs = [
 ];
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
-<?php include __DIR__ . '/../includes/top-bar.php'; ?>
 
 <!-- Content -->
 <div class="container-fluid">
@@ -49,9 +48,7 @@ $breadcrumbs = [
               <th>S.No.</th>
               <th>Note Type</th>
               <th>Content</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th>Created By</th>
+              <th>Event</th>
               <th>Date</th>
               <th>Actions</th>
             </tr>
@@ -66,7 +63,7 @@ $breadcrumbs = [
               }
             }
             
-            $select_query = mysqli_query($conn, "SELECT * FROM vms_coordinator_notes ORDER BY created_at DESC");
+            $select_query = mysqli_query($conn, "SELECT n.*, e.event_name FROM vms_coordinator_notes n LEFT JOIN vms_events e ON n.event_id = e.event_id ORDER BY n.created_at DESC");
             $sn = 1;
             while($row = mysqli_fetch_array($select_query))
             {
@@ -74,22 +71,8 @@ $breadcrumbs = [
             <tr>
               <td><?php echo $sn; ?></td>
               <td><?php echo htmlspecialchars($row['note_type']); ?></td>
-              <td><?php echo htmlspecialchars(substr($row['note_content'], 0, 50)) . (strlen($row['note_content']) > 50 ? '...' : ''); ?></td>
-              <td>
-                <span class="badge <?php 
-                  if($row['priority'] == 'High') echo 'text-bg-danger-subtle text-danger border border-danger';
-                  elseif($row['priority'] == 'Medium') echo 'text-bg-warning-subtle text-warning border border-warning';
-                  else echo 'text-bg-info-subtle text-info border border-info';
-                ?>">
-                  <?php echo htmlspecialchars($row['priority']); ?>
-                </span>
-              </td>
-              <td>
-                <span class="badge <?php echo $row['status'] == 'Completed' ? 'text-bg-success-subtle text-success border border-success' : 'text-bg-secondary-subtle text-secondary border border-secondary'; ?>">
-                  <?php echo htmlspecialchars($row['status']); ?>
-                </span>
-              </td>
-              <td><?php echo htmlspecialchars($row['created_by']); ?></td>
+              <td><?php echo htmlspecialchars(substr($row['content'], 0, 50)) . (strlen($row['content']) > 50 ? '...' : ''); ?></td>
+              <td><?php echo htmlspecialchars($row['event_name'] ?? 'N/A'); ?></td>
               <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
               <td>
                 <div class="d-flex gap-2">
@@ -108,7 +91,7 @@ $breadcrumbs = [
       </div>
       <div class="d-flex justify-content-between align-items-center mt-3">
         <span class="muted">Showing all coordinator notes</span>
-        <button class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-download me-1"></i>Export</button>
+        <a href="../exports/export_notes.php" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-download me-1"></i>Export</a>
       </div>
     </div>
   </div>

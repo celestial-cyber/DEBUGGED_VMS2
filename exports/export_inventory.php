@@ -13,7 +13,7 @@ header('Content-Disposition: attachment; filename="inventory_export_'.date('Y-m-
 
 // Create CSV header
 $output = fopen('php://output', 'w');
-fputcsv($output, array('Item Name', 'Total Stock', 'Used Count', 'Status', 'Description', 'Last Updated'));
+fputcsv($output, array('Item Name', 'Total Stock', 'Used Count', 'Status', 'Last Updated'));
 
 // Build the query based on filters
 $sql = "SELECT * FROM vms_inventory WHERE 1=1";
@@ -50,7 +50,6 @@ while ($row = mysqli_fetch_assoc($result)) {
         $row['total_stock'],
         $row['used_count'],
         $row['status'],
-        $row['description'],
         date('Y-m-d H:i:s', strtotime($row['updated_at']))
     ));
 }

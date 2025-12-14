@@ -12,7 +12,7 @@ if ($id <= 0 || !in_array($action, ['checkin','checkout'])) {
 }
 
 if ($action === 'checkin') {
-  mysqli_query($conn, "UPDATE vms_visitors SET in_time=IFNULL(in_time, NOW()), out_time=NULL, status=1 WHERE id=$id");
+  mysqli_query($conn, "UPDATE vms_visitors SET in_time=NOW(), out_time=NULL, status=1 WHERE id=$id");
 } else if ($action === 'checkout') {
   mysqli_query($conn, "UPDATE vms_visitors SET out_time=NOW(), status=0 WHERE id=$id AND in_time IS NOT NULL");
 }

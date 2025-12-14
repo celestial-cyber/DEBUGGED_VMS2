@@ -15,7 +15,6 @@ $breadcrumbs = [
 ];
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
-<?php include __DIR__ . '/../includes/top-bar.php'; ?>
 
 <!-- Content -->
 <div class="container-fluid">
@@ -211,7 +210,7 @@ $breadcrumbs = [
           }
           ?>
         </span>
-        <a href="export_inventory.php<?php echo isset($_GET['status']) || isset($_GET['item_name']) || isset($_GET['stock_level']) ? '?' . http_build_query($_GET) : ''; ?>" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-download me-1"></i>Export</a>
+        <a href="../exports/export_inventory.php<?php echo isset($_GET['status']) || isset($_GET['item_name']) || isset($_GET['stock_level']) ? '?' . http_build_query($_GET) : ''; ?>" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-download me-1"></i>Export</a>
       </div>
     </div>
   </div>

@@ -31,6 +31,6 @@ if (!isset($breadcrumbs)) {
         <span class="text-muted">Welcome, <?php echo $name; ?></span>
         <button class="btn btn-soft"><i class="fa-regular fa-bell"></i></button>
         <button class="btn btn-soft"><i class="fa-regular fa-circle-question"></i></button>
-        <a href="/logout.php" class="btn btn-soft"><i class="fa-solid fa-right-from-bracket"></i></a>
+        <a href="../admin/dashboard.php" class="btn btn-soft"><i class="fa-solid fa-right-from-bracket"></i></a>
     </div>
 </div>

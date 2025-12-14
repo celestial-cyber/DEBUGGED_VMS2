@@ -344,7 +344,10 @@ if(isset($_POST['sv-vstr'])) {
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
       <div class="modal-header bg-<?php echo $popup_type ?: 'primary'; ?> text-white">
-        <h5 class="modal-title"><?php echo ucfirst($popup_type ?: 'Info'); ?></h5>
+        <h5 class="modal-title">
+          <i class="fa-solid fa-<?php echo $popup_type === 'success' ? 'check-circle' : ($popup_type === 'danger' ? 'exclamation-triangle' : 'info-circle'); ?> me-2"></i>
+          <?php echo ucfirst($popup_type ?: 'Info'); ?>
+        </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body text-<?php echo $popup_type ?: 'dark'; ?>">
@@ -361,8 +364,22 @@ if(isset($_POST['sv-vstr'])) {
   </div>
 </div>
 <script>
-    var popupModal = new bootstrap.Modal(document.getElementById('visitorPopup'));
-    popupModal.show();
+    // Ensure Bootstrap is loaded before showing modal
+    document.addEventListener('DOMContentLoaded', function() {
+        var popupModalElement = document.getElementById('visitorPopup');
+        if (popupModalElement && typeof bootstrap !== 'undefined') {
+            var popupModal = new bootstrap.Modal(popupModalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            popupModal.show();
+        } else {
+            // Fallback: show alert if Bootstrap modal fails
+            setTimeout(function() {
+                alert('<?php echo addslashes($popup_message ?? ''); ?>');
+            }, 500);
+        }
+    });
 </script>
 <?php }?>
 

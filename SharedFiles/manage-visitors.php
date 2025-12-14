@@ -186,7 +186,7 @@ $offset = ($page - 1) * $perPage;
 
                             $stmt = $conn->prepare($sql);
                             if (!$stmt) {
-                                echo "<tr><td colspan=9 class='text-danger'>Query prepare failed: " . htmlspecialchars($conn->error) . "</td></tr>";
+                                echo "<tr><td colspan=12 class='text-danger'>Query prepare failed: " . htmlspecialchars($conn->error) . "</td></tr>";
                             } else {
                                 if (!empty($params)) { $stmt->bind_param($types, ...$params); }
                                 $stmt->execute();

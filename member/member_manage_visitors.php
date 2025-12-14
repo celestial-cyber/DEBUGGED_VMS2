@@ -99,6 +99,8 @@ if(empty($id))
                             <th>Department</th>
                             <th>Year of Graduation</th>
                             <th>Status</th>
+                            <th>In Time</th>
+                            <th>Out Time</th>
                             <th>Goodies</th>
                             <th>Added By</th>
                             <th>Actions</th>
@@ -192,6 +194,8 @@ if(empty($id))
                                             <?php echo $row['status']==1? 'In' : 'Out';?>
                                         </span>
                                     </td>
+                                    <td><?php echo !empty($row['in_time']) ? date('M j, Y H:i', strtotime($row['in_time'])) : 'Not Checked In'; ?></td>
+                                    <td><?php echo !empty($row['out_time']) ? date('M j, Y H:i', strtotime($row['out_time'])) : 'Not Checked Out'; ?></td>
                                     <td>
                                         <?php
                                         // Get goodies for this visitor
@@ -260,6 +264,8 @@ if(empty($id))
                                             <?php echo $row['status']==1? 'In' : 'Out';?>
                                         </span>
                                     </td>
+                                    <td><?php echo !empty($row['in_time']) ? date('M j, Y H:i', strtotime($row['in_time'])) : 'Not Checked In'; ?></td>
+                                    <td><?php echo !empty($row['out_time']) ? date('M j, Y H:i', strtotime($row['out_time'])) : 'Not Checked Out'; ?></td>
                                     <td>
                                         <?php
                                         // Get goodies for this visitor
@@ -351,7 +357,7 @@ if(empty($id))
                         <?php $sn_reg++; }
                         if($sn_reg == 1):?>
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
+                                <td colspan="10" class="text-center text-muted py-4">
                                     <i class="fa-solid fa-calendar-plus fa-2x mb-2"></i>
                                     <p>No event registrations found.</p>
                                 </td>
