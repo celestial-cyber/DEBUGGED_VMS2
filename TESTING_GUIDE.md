@@ -55,7 +55,11 @@
 5. Verify success message displays
 6. Check database:
    - Record should appear in alumni_registrations table
+<<<<<<< HEAD
    - Record should appear in vms_visitors table (synced)
+=======
+   - Record should appear in tbl_visitors table (synced)
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 ```
 
 ### Test 2: Staff Login (Admin)
@@ -118,7 +122,11 @@ LIMIT 10;
 ### Check Visitor Sync
 ```sql
 SELECT id, name, email, phone, added_by, status, event_id 
+<<<<<<< HEAD
 FROM vms_visitors 
+=======
+FROM tbl_visitors 
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 WHERE added_by IS NULL 
 ORDER BY registration_date DESC 
 LIMIT 10;
@@ -127,7 +135,11 @@ LIMIT 10;
 ### Count Self-Registered Alumni
 ```sql
 SELECT COUNT(*) as total_self_registered 
+<<<<<<< HEAD
 FROM vms_visitors 
+=======
+FROM tbl_visitors 
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 WHERE added_by IS NULL;
 ```
 
@@ -143,7 +155,11 @@ SELECT
   a.roll_number,
   v.roll_number as visitor_roll
 FROM alumni_registrations a
+<<<<<<< HEAD
 LEFT JOIN vms_visitors v ON a.email = v.email AND a.name = v.name
+=======
+LEFT JOIN tbl_visitors v ON a.email = v.email AND a.name = v.name
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 ORDER BY a.created_at DESC
 LIMIT 5;
 ```
@@ -152,11 +168,19 @@ LIMIT 5;
 
 ### Admin User
 - **Email**: admin@example.com
+<<<<<<< HEAD
 - **Password**: admin123 (or check vms_admin table)
 
 ### Member User
 - **Email**: member@example.com
 - **Password**: member123 (or check vms_members table)
+=======
+- **Password**: admin123 (or check tbl_admin table)
+
+### Member User
+- **Email**: member@example.com
+- **Password**: member123 (or check tbl_members table)
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 
 **Note**: MD5 hashing is used, so compare with `MD5('password')` in database.
 
@@ -210,7 +234,11 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; 
 
 ### Issue: Alumni not appearing in dashboard
 - **Check**: alumni_registrations table for new records
+<<<<<<< HEAD
 - **Check**: vms_visitors table for synced records
+=======
+- **Check**: tbl_visitors table for synced records
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 - **Check**: Event ID (should be 1)
 - **Solution**: Verify transaction committed successfully
 
@@ -223,7 +251,11 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; 
 - **Check**: Email/password match exactly in database
 - **Check**: Password is MD5 hashed in database
 - **Check**: Role selection is correct (admin vs member)
+<<<<<<< HEAD
 - **Solution**: Query vms_admin/vms_members directly to verify credentials
+=======
+- **Solution**: Query tbl_admin/tbl_members directly to verify credentials
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 
 ## Next Steps for Production
 

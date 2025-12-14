@@ -105,7 +105,11 @@ footer {
 <!-- Main Center Card -->
 <div class="center-box">
   <!-- Left Logo -->
+<<<<<<< HEAD
   <img src="assets/images/SALogo.png" class="logo-left" alt="SA Logo">
+=======
+  <img src="Images/SALogo.png" class="logo-left" alt="SA Logo">
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 
   <!-- SPECANCIENS PRESENTS text -->
   <div style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 30px; margin-left: 150px; margin-top: -20px;">
@@ -121,7 +125,11 @@ footer {
   <h5 class="subtitle">An L&D Initiative</h5>
 
   <!-- Illustration -->
+<<<<<<< HEAD
   <img src="assets/images/buildings.png" alt="Illustration" class="illustration">
+=======
+  <img src="Images/buildings.png" alt="Illustration" class="illustration">
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 
   <!-- Get Started Button -->
   <div class="mt-3">

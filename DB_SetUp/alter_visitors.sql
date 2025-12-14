@@ -1,0 +1,1 @@
+ALTER TABLE vms_visitors ADD COLUMN registration_type ENUM('beforehand', 'spot') DEFAULT 'beforehand';

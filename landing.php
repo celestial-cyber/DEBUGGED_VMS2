@@ -1,6 +1,10 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
+<<<<<<< HEAD
 include 'config/connection.php'; // Make sure this file does NOT echo anything
+=======
+include 'connection.php'; // Make sure this file does NOT echo anything
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 
 $login_error = false;
 $alumni_error = false;
@@ -8,6 +12,7 @@ $alumni_success = false;
 
 // Handle login form submission
 if (isset($_POST['login_btn'])) {
+<<<<<<< HEAD
     $email = trim($_POST['email']);
     $pwd   = $_POST['pwd']; // Get plain text password
     $role  = $_POST['role'];
@@ -112,6 +117,31 @@ if (isset($_POST['login_btn'])) {
         echo '</div>';
     }
 }
+=======
+    $email = $_POST['email'];
+    $pwd   = md5($_POST['pwd']);
+    $role  = $_POST['role'];
+
+    if ($role === "admin") {
+        $select_query = mysqli_query($conn, "SELECT id, user_name FROM vms_admin WHERE emailid='$email' AND password='$pwd'");
+    } else {
+        $select_query = mysqli_query($conn, "SELECT id, member_name FROM vms_members WHERE emailid='$email' AND password='$pwd'");
+    }
+
+    if (mysqli_num_rows($select_query) > 0) {
+        $username = mysqli_fetch_row($select_query);
+        $_SESSION['id']   = $username[0];
+        $_SESSION['name'] = $username[1];
+        $_SESSION['role'] = $role;
+
+        // Redirect to dashboard
+        $dashboard_link = ($role === 'admin') ? "admin_dashboard.php" : "member_dashboard.php";
+        header("Location: $dashboard_link");
+        exit();
+    } else {
+        $login_error = true;
+    }
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 }
 
 // Handle alumni registration submission
@@ -159,9 +189,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
             $alumni_id = $stmt->insert_id;
             $stmt->close();
 
+<<<<<<< HEAD
             // Insert into vms_visitors
             $stmt = $conn->prepare(
                 "INSERT INTO vms_visitors 
+=======
+            // Insert into tbl_visitors
+            $stmt = $conn->prepare(
+                "INSERT INTO tbl_visitors 
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
                 (name, email, phone, department, roll_number, added_by, status, registration_type, visitor_type, event_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
@@ -368,6 +404,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
+<<<<<<< HEAD
         .password-container {
             position: relative;
             display: flex;
@@ -395,6 +432,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
             color: #667eea;
         }
 
+=======
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
         .role-selection {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -506,8 +545,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
 
         <!-- Tab Navigation -->
         <div class="tabs">
+<<<<<<< HEAD
             <button type="button" class="tab-button active" onclick="switchTab('alumni')">Alumni Registration</button>
             <button type="button" class="tab-button" onclick="switchTab('login')">Staff Login</button>
+=======
+            <button class="tab-button active" onclick="switchTab('alumni')">Alumni Registration</button>
+            <button class="tab-button" onclick="switchTab('login')">Staff Login</button>
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
         </div>
 
         <!-- Alumni Registration Tab -->
@@ -523,7 +567,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
                 <?php if ($alumni_error): ?>
                     <div class="error-message">
                         <i class="fas fa-exclamation-circle"></i>
+<<<<<<< HEAD
                         <p><?php echo htmlspecialchars($alumni_error ?? ''); ?></p>
+=======
+                        <p><?php echo htmlspecialchars($alumni_error); ?></p>
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
                     </div>
                 <?php endif; ?>
                 
@@ -592,24 +640,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
         <!-- Staff Login Tab -->
         <div id="login-tab" class="tab-content">
             <div class="role-selection">
+<<<<<<< HEAD
                 <button type="button" class="role-btn admin-btn"
         onclick="setRole('admin', this)">Admin Login</button>
 
 <button type="button" class="role-btn member-btn"
         onclick="setRole('member', this)">Member Login</button>
 
+=======
+                <button class="role-btn admin-btn" onclick="setRole('admin')">Admin Login</button>
+                <button class="role-btn member-btn" onclick="setRole('member')">Member Login</button>
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
             </div>
 
             <?php if ($login_error): ?>
                 <div class="error-message">
                     <i class="fas fa-exclamation-circle"></i>
                     <p>Invalid email or password. Please try again.</p>
+<<<<<<< HEAD
                     <?php if (isset($_GET['debug']) && $_GET['debug'] == '1'): ?>
                         <div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; text-align: left; font-size: 12px;">
                             <strong>Debug Info:</strong><br>
                             Last attempted login details will appear here after submission.
                         </div>
                     <?php endif; ?>
+=======
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
                 </div>
             <?php endif; ?>
 
@@ -620,12 +676,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
                 </div>
                 <div class="form-group">
                     <label>Password *</label>
+<<<<<<< HEAD
                     <div class="password-container">
                         <input type="password" name="pwd" id="password" placeholder="Enter your password" required>
                         <button type="button" class="password-toggle" id="password-toggle">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
+=======
+                    <input type="password" name="pwd" placeholder="Enter your password" required>
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
                 </div>
                 <input type="hidden" name="role" id="role" value="admin">
                 <button type="submit" name="login_btn" class="btn-submit">Login</button>
@@ -656,6 +716,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
             event.target.classList.add('active');
         }
 
+<<<<<<< HEAD
        function setRole(role, el) {
     document.getElementById('role').value = role;
 
@@ -666,6 +727,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
     el.classList.add('selected');
 }
 
+=======
+        function setRole(role) {
+            document.getElementById('role').value = role;
+            const buttons = document.querySelectorAll('.role-btn');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 
         function resetAlumniForm() {
             location.reload();
@@ -678,6 +747,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
                 adminBtn.classList.add('selected');
             }
         });
+<<<<<<< HEAD
 
         // Password visibility toggle
         document.getElementById('password-toggle').addEventListener('click', function() {
@@ -694,6 +764,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
                 toggleIcon.classList.add('fa-eye');
             }
         });
+=======
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
     </script>
 </body>
 </html>

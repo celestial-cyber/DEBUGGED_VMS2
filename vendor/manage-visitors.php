@@ -1,6 +1,10 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
+<<<<<<< HEAD
 include '../config/connection.php';
+=======
+include ('connection.php');
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
 $name = $_SESSION['name'];
 $id = $_SESSION['id'];
 if(empty($id))
@@ -8,9 +12,15 @@ if(empty($id))
     header("Location: index.php"); 
 }
 ?>
+<<<<<<< HEAD
 <?php include __DIR__ . '/../includes/header.php'; ?>
   <div id="wrapper">
     <?php include __DIR__ . '/../includes/sidebar.php'; ?>
+=======
+<?php include('include/header.php'); ?>
+  <div id="wrapper">
+    <?php include('include/side-bar.php'); ?>
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
     <div id="content-wrapper">
       <div class="container-fluid">
         <!-- Breadcrumbs-->
@@ -136,7 +146,11 @@ if(empty($id))
   <a class="scroll-to-top rounded" href="#page-top">
     <i class="fas fa-angle-up"></i>
   </a>
+<<<<<<< HEAD
  <?php include __DIR__ . '/../includes/footer.php'; ?>
+=======
+ <?php include('include/footer.php'); ?>
+>>>>>>> 302b6cc1279181be56d9673dd8460378816a0337
  <script language="JavaScript" type="text/javascript">
 function confirmDelete(){
     return confirm('Are you sure want to delete this Visitor?');

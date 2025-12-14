@@ -1,0 +1,1 @@
+DESCRIBE vms_visitors;
