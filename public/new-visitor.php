@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sbt-vstr'])) {
     // Debug: Log that form was submitted
     error_log("Form submitted - Method: " . $_SERVER['REQUEST_METHOD']);
     error_log("POST data: " . print_r($_POST, true));
+    error_log("SESSION data: " . print_r($_SESSION, true));
     
     // Validate CSRF token first
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
@@ -52,21 +53,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sbt-vstr'])) {
         $address = htmlspecialchars($_POST['address'] ?? '');
         $department = htmlspecialchars($_POST['department'] ?? '');
         $gender = htmlspecialchars($_POST['gender'] ?? '');
-        $year = htmlspecialchars($_POST['year_of_graduation'] ?? '');
+        $year = (int)($_POST['year_of_graduation'] ?? 0);
         $event_id = (int)($_POST['event_id'] ?? 0);
         $roll_number = htmlspecialchars($_POST['roll_number'] ?? '');
+        $relation = htmlspecialchars($_POST['relation'] ?? ''); // Added relation
 
         // Get admin ID from session
         $added_by = $_SESSION['id'] ?? null;
+        error_log('SESSION ID = ' . ($added_by ?? 'NOT SET'));
 
         // Merge first + last name into full_name
         $full_name = trim($first_name . ' ' . $last_name);
 
         // Validate required fields
-        if (empty($full_name) || empty($email) || empty($phone) || empty($event_id)) {
-            $popup_message = 'Please fill in all required fields.';
+        if (empty($full_name) || empty($email) || empty($phone) || empty($event_id) || empty($roll_number) || empty($department) || empty($gender) || empty($year)) { // Added department, gender, year to validation
+            $popup_message = 'Please fill in all required fields (including Roll Number, Department, Gender, and Year of Graduation).';
             $popup_type = 'warning';
-            error_log("Validation failed: full_name=$full_name, email=$email, phone=$phone, event_id=$event_id");
+            error_log("Validation failed: full_name=$full_name, email=$email, phone=$phone, event_id=$event_id, roll_number=$roll_number, department=$department, gender=$gender, year=$year");
         } elseif (empty($added_by)) {
             $popup_message = 'Admin not logged in. Please login to add visitors.';
             $popup_type = 'danger';
@@ -75,38 +78,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sbt-vstr'])) {
             error_log("Validation passed, proceeding with database insertion");
             // Default values for other fields
             $in_time = date('Y-m-d H:i:s');
-            $visitor_type = 'regular';
-            $registration_type = 'beforehand';
-            $status = 1;
+            $status = 1; // Default status: In
+            $visitor_type = 'regular'; // Default type
+            $registration_type = 'beforehand'; // Default registration type
 
             // Insert into database
             $stmt = $conn->prepare("INSERT INTO vms_visitors 
-                (event_id, name, email, mobile, address, department, gender, year_of_graduation, roll_number, added_by, in_time, visitor_type, registration_type, status) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                (event_id, name, email, mobile, address, department, gender, year_of_graduation, roll_number, added_by, relation, in_time, visitor_type, registration_type, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"); // Added relation to query
 
             if ($stmt) {
+                // Corrected bind_param string (15 parameters: i, s, s, s, s, s, s, i, s, i, s, s, s, s, i)
                 $stmt->bind_param(
-                    "issssssisissii",
-                    $event_id,
-                    $full_name,
-                    $email,
-                    $phone,
-                    $address,
-                    $department,
-                    $gender,
-                    $year,
-                    $roll_number,
-                    $added_by,
-                    $in_time,
-                    $visitor_type,
-                    $registration_type,
-                    $status
-                );
+    "issssssississsi",
+    $event_id,
+    $full_name,
+    $email,
+    $phone,
+    $address,
+    $department,
+    $gender,
+    $year,
+    $roll_number,   // string
+    $added_by,      // int
+    $relation,
+    $in_time,
+    $visitor_type,
+    $registration_type,
+    $status
+);
+
 
                 if ($stmt->execute()) {
                     $show_success_modal = true;
                     $_POST = array(); // Clear POST data
+                    unset($_SESSION['csrf_token']); // Regenerate CSRF token after successful insert
                     error_log("Database insertion successful, show_success_modal set to true");
+                    // Removed the header redirect to allow the success modal to be shown
                 } else {
                     $popup_message = "Error saving visitor: " . $stmt->error;
                     $popup_type = "danger";
@@ -525,7 +533,9 @@ if (empty($_SESSION['csrf_token'])) {
                                 <option value="">Select Department</option>
                                 <?php
                                 // Reset the departments result pointer
-                                mysqli_data_seek($departments, 0);
+                                if ($departments && $departments->num_rows > 0) {
+                                    mysqli_data_seek($departments, 0);
+                                }
                                 while ($dept = mysqli_fetch_assoc($departments)) {
                                 ?>
                                     <option value="<?php echo $dept['department']; ?>"><?php echo $dept['department']; ?></option>
@@ -538,18 +548,6 @@ if (empty($_SESSION['csrf_token'])) {
                 <div class="form-row-enhanced">
                     <div class="form-col-enhanced">
                         <div class="form-group-enhanced">
-                            <label for="year_of_graduation" class="form-label-enhanced required-field">Year of Graduation</label>
-                            <select name="year_of_graduation" id="year_of_graduation" class="form-select-enhanced" required autocomplete="bday-year">
-                                <option value="">Select Year</option>
-                                <?php $years = range(date('Y') - 5, date('Y') + 5); ?>
-                                <?php foreach ($years as $year_option) { ?>
-                                    <option value="<?php echo $year_option; ?>"><?php echo $year_option; ?></option>
-                                <?php } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-col-enhanced">
-                        <div class="form-group-enhanced">
                             <label for="gender" class="form-label-enhanced required-field">Gender</label>
                             <select name="gender" id="gender" class="form-select-enhanced" required autocomplete="sex">
                                 <option value="">Select Gender</option>
@@ -560,9 +558,21 @@ if (empty($_SESSION['csrf_token'])) {
                             </select>
                         </div>
                     </div>
+                    <div class="form-col-enhanced">
+                        <div class="form-group-enhanced">
+                            <label for="year_of_graduation" class="form-label-enhanced required-field">Year of Graduation</label>
+                            <select name="year_of_graduation" id="year_of_graduation" class="form-select-enhanced" required autocomplete="bday-year">
+                                <option value="">Select Year</option>
+                                <?php $years = range(date('Y') - 5, date('Y') + 5); ?>
+                                <?php foreach ($years as $year_option) { ?>
+                                    <option value="<?php echo $year_option; ?>"><?php echo $year_option; ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Event and Gender Section -->
+                <!-- Event and Demographics Section -->
                 <h3 class="form-section-title">
                     <i class="fas fa-calendar-alt me-2"></i>Event & Demographics
                 </h3>
@@ -585,14 +595,8 @@ if (empty($_SESSION['csrf_token'])) {
                     </div>
                     <div class="form-col-enhanced">
                         <div class="form-group-enhanced">
-                            <label for="gender" class="form-label-enhanced required-field">Gender</label>
-                            <select name="gender" id="gender" class="form-select-enhanced" required autocomplete="sex">
-                                <option value="">Select Gender</option>
-                                <?php $genders = ['Male', 'Female', 'Other']; ?>
-                                <?php foreach ($genders as $gender_option) { ?>
-                                    <option value="<?php echo $gender_option; ?>"><?php echo $gender_option; ?></option>
-                                <?php } ?>
-                            </select>
+                            <label for="relation" class="form-label-enhanced">Relation</label>
+                            <input type="text" name="relation" id="relation" class="form-control-enhanced" autocomplete="off" placeholder="e.g., Parent, Student, Staff">
                         </div>
                     </div>
                 </div>
@@ -616,6 +620,10 @@ if (empty($_SESSION['csrf_token'])) {
             </form>
         </div>
     </div>
+
+    <footer class="text-center mt-5 mb-3 text-muted">
+        © <?php echo date('Y'); ?> Visitor Management System
+    </footer>
 
     <!-- Success Modal -->
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
@@ -659,7 +667,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.querySelector('button[type="submit"]');
     const form = document.querySelector('form');
     
-    form.addEventListener('submit', function() {
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            return; // don't disable button if form is invalid
+        }
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registering...';
         submitBtn.disabled = true;
     });
@@ -723,3 +734,8 @@ document.addEventListener('DOMContentLoaded', function() {
 console.log('show_success_modal is false');
 <?php endif; ?>
 </script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

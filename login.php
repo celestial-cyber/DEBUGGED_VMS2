@@ -79,20 +79,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['alumni_submit'])) {
             $stmt->close();
 
             // Insert into vms_visitors
+            $event_id = 1; // Default event
             $stmt = $conn->prepare(
                 "INSERT INTO vms_visitors
-                (name, email, phone, department, roll_number, added_by, status, registration_type, visitor_type, event_id)
+                (event_id, name, email, mobile, department, year_of_graduation, roll_number, status, visitor_type, registration_type)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
 
             $added_by = null;
-            $registration_type = 'regular';
             $visitor_status = 1;
-            $event_id = 1;
+            $visitor_type = 'regular';
+            $registration_type = 'beforehand';
             $stmt->bind_param(
-                'ssssssissi',
-                $name, $email, $call, $department, $roll_number,
-                $added_by, $visitor_status, $registration_type, $registration_type, $event_id
+                'issssissss',
+                $event_id, $name, $email, $call, $department, $batch, $roll_number,
+                $visitor_status, $visitor_type, $registration_type
             );
             $stmt->execute();
             $stmt->close();
